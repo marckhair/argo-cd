@@ -1,0 +1,330 @@
+apiVersion: kyverno.io/v1
+kind: Policy
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"kyverno.io/v1","kind":"Policy","metadata":{"annotations":{},"name":"sample-policy","namespace":"test-namespace"},"spec":{"rules":[{"match":{"resources":{"kinds":["Pod"]}},"name":"require-label-app","validate":{"message":"An `app` label is required.","pattern":{"metadata":{"labels":{"app":"?*"}}}}},{"match":{"resources":{"kinds":["Pod"]}},"name":"require-label-environment","validate":{"message":"An `environment` label is required.","pattern":{"metadata":{"labels":{"environment":"?*"}}}}},{"match":{"resources":{"kinds":["Pod"]}},"name":"require-annotation-version","validate":{"message":"A `version` annotation is required.","pattern":{"metadata":{"annotations":{"version":"?*"}}}}},{"match":{"resources":{"kinds":["Pod"]}},"name":"require-annotation-maintainer","validate":{"message":"A `maintainer` annotation is required.","pattern":{"metadata":{"annotations":{"maintainer":"?*"}}}}},{"match":{"resources":{"kinds":["Pod"]}},"name":"require-spec-containers","validate":{"message":"The Pod must have at least one container.","pattern":{"spec":{"containers":[{"name":"?*"}]}}}}]}}
+  creationTimestamp: "2025-01-17T19:09:08Z"
+  generation: 1
+  name: sample-policy
+  namespace: test-namespace
+  resourceVersion: "3276609"
+  uid: 276aca5f-e66e-4cb3-b2e6-fdbf0de0b1fb
+spec:
+  admission: true
+  background: true
+  rules:
+  - match:
+      resources:
+        kinds:
+        - Pod
+    name: require-label-app
+    skipBackgroundRequests: true
+    validate:
+      message: An `app` label is required.
+      pattern:
+        metadata:
+          labels:
+            app: ?*
+  - match:
+      resources:
+        kinds:
+        - Pod
+    name: require-label-environment
+    skipBackgroundRequests: true
+    validate:
+      message: An `environment` label is required.
+      pattern:
+        metadata:
+          labels:
+            environment: ?*
+  - match:
+      resources:
+        kinds:
+        - Pod
+    name: require-annotation-version
+    skipBackgroundRequests: true
+    validate:
+      message: A `version` annotation is required.
+      pattern:
+        metadata:
+          annotations:
+            version: ?*
+  - match:
+      resources:
+        kinds:
+        - Pod
+    name: require-annotation-maintainer
+    skipBackgroundRequests: true
+    validate:
+      message: A `maintainer` annotation is required.
+      pattern:
+        metadata:
+          annotations:
+            maintainer: ?*
+  - match:
+      resources:
+        kinds:
+        - Pod
+    name: require-spec-containers
+    skipBackgroundRequests: true
+    validate:
+      message: The Pod must have at least one container.
+      pattern:
+        spec:
+          containers:
+          - name: ?*
+  validationFailureAction: Audit
+status:
+  autogen:
+    rules:
+    - exclude:
+        resources: {}
+      generate:
+        clone: {}
+        cloneList: {}
+      match:
+        resources:
+          kinds:
+          - DaemonSet
+          - Deployment
+          - Job
+          - StatefulSet
+          - ReplicaSet
+          - ReplicationController
+      mutate: {}
+      name: autogen-require-label-app
+      skipBackgroundRequests: true
+      validate:
+        message: An `app` label is required.
+        pattern:
+          spec:
+            template:
+              metadata:
+                labels:
+                  app: ?*
+    - exclude:
+        resources: {}
+      generate:
+        clone: {}
+        cloneList: {}
+      match:
+        resources:
+          kinds:
+          - CronJob
+      mutate: {}
+      name: autogen-cronjob-require-label-app
+      skipBackgroundRequests: true
+      validate:
+        message: An `app` label is required.
+        pattern:
+          spec:
+            jobTemplate:
+              spec:
+                template:
+                  metadata:
+                    labels:
+                      app: ?*
+    - exclude:
+        resources: {}
+      generate:
+        clone: {}
+        cloneList: {}
+      match:
+        resources:
+          kinds:
+          - DaemonSet
+          - Deployment
+          - Job
+          - StatefulSet
+          - ReplicaSet
+          - ReplicationController
+      mutate: {}
+      name: autogen-require-label-environment
+      skipBackgroundRequests: true
+      validate:
+        message: An `environment` label is required.
+        pattern:
+          spec:
+            template:
+              metadata:
+                labels:
+                  environment: ?*
+    - exclude:
+        resources: {}
+      generate:
+        clone: {}
+        cloneList: {}
+      match:
+        resources:
+          kinds:
+          - CronJob
+      mutate: {}
+      name: autogen-cronjob-require-label-environment
+      skipBackgroundRequests: true
+      validate:
+        message: An `environment` label is required.
+        pattern:
+          spec:
+            jobTemplate:
+              spec:
+                template:
+                  metadata:
+                    labels:
+                      environment: ?*
+    - exclude:
+        resources: {}
+      generate:
+        clone: {}
+        cloneList: {}
+      match:
+        resources:
+          kinds:
+          - DaemonSet
+          - Deployment
+          - Job
+          - StatefulSet
+          - ReplicaSet
+          - ReplicationController
+      mutate: {}
+      name: autogen-require-annotation-version
+      skipBackgroundRequests: true
+      validate:
+        message: A `version` annotation is required.
+        pattern:
+          spec:
+            template:
+              metadata:
+                annotations:
+                  version: ?*
+    - exclude:
+        resources: {}
+      generate:
+        clone: {}
+        cloneList: {}
+      match:
+        resources:
+          kinds:
+          - CronJob
+      mutate: {}
+      name: autogen-cronjob-require-annotation-version
+      skipBackgroundRequests: true
+      validate:
+        message: A `version` annotation is required.
+        pattern:
+          spec:
+            jobTemplate:
+              spec:
+                template:
+                  metadata:
+                    annotations:
+                      version: ?*
+    - exclude:
+        resources: {}
+      generate:
+        clone: {}
+        cloneList: {}
+      match:
+        resources:
+          kinds:
+          - DaemonSet
+          - Deployment
+          - Job
+          - StatefulSet
+          - ReplicaSet
+          - ReplicationController
+      mutate: {}
+      name: autogen-require-annotation-maintainer
+      skipBackgroundRequests: true
+      validate:
+        message: A `maintainer` annotation is required.
+        pattern:
+          spec:
+            template:
+              metadata:
+                annotations:
+                  maintainer: ?*
+    - exclude:
+        resources: {}
+      generate:
+        clone: {}
+        cloneList: {}
+      match:
+        resources:
+          kinds:
+          - CronJob
+      mutate: {}
+      name: autogen-cronjob-require-annotation-maintainer
+      skipBackgroundRequests: true
+      validate:
+        message: A `maintainer` annotation is required.
+        pattern:
+          spec:
+            jobTemplate:
+              spec:
+                template:
+                  metadata:
+                    annotations:
+                      maintainer: ?*
+    - exclude:
+        resources: {}
+      generate:
+        clone: {}
+        cloneList: {}
+      match:
+        resources:
+          kinds:
+          - DaemonSet
+          - Deployment
+          - Job
+          - StatefulSet
+          - ReplicaSet
+          - ReplicationController
+      mutate: {}
+      name: autogen-require-spec-containers
+      skipBackgroundRequests: true
+      validate:
+        message: The Pod must have at least one container.
+        pattern:
+          spec:
+            template:
+              spec:
+                containers:
+                - name: ?*
+    - exclude:
+        resources: {}
+      generate:
+        clone: {}
+        cloneList: {}
+      match:
+        resources:
+          kinds:
+          - CronJob
+      mutate: {}
+      name: autogen-cronjob-require-spec-containers
+      skipBackgroundRequests: true
+      validate:
+        message: The Pod must have at least one container.
+        pattern:
+          spec:
+            jobTemplate:
+              spec:
+                template:
+                  spec:
+                    containers:
+                    - name: ?*
+  conditions:
+  - lastTransitionTime: "2025-01-17T19:09:11Z"
+    message: Ready
+    reason: Succeeded
+    status: "True"
+    type: Ready
+  ready: true
+  rulecount:
+    generate: 0
+    mutate: 0
+    validate: 5
+    verifyimages: 0
+  validatingadmissionpolicy:
+    generated: false
+    message: ""
