@@ -81,6 +81,7 @@ status:
     status: Healthy
 operation:
   sync:
+    dryRun: true
     revision: 041eab7439ece92c99b043f0e171788185b8fc1d
     syncStrategy:
       hook: {}
@@ -230,7 +231,9 @@ type TestMetricServerConfig struct {
 	ExpectedResponse string
 	AppLabels        []string
 	AppConditions    []string
+	ClusterLabels    []string
 	ClustersInfo     []gitopsCache.ClusterInfo
+	ClusterLister    ClusterLister
 }
 
 func testMetricServer(t *testing.T, fakeAppYAMLs []string, expectedResponse string, appLabels []string, appConditions []string) {
@@ -240,6 +243,7 @@ func testMetricServer(t *testing.T, fakeAppYAMLs []string, expectedResponse stri
 		ExpectedResponse: expectedResponse,
 		AppLabels:        appLabels,
 		AppConditions:    appConditions,
+		ClusterLabels:    []string{},
 		ClustersInfo:     []gitopsCache.ClusterInfo{},
 	}
 	runTest(t, cfg)
@@ -254,10 +258,7 @@ func runTest(t *testing.T, cfg TestMetricServerConfig) {
 
 	if len(cfg.ClustersInfo) > 0 {
 		ci := &fakeClusterInfo{clustersInfo: cfg.ClustersInfo}
-		collector := &clusterCollector{
-			infoSource: ci,
-			info:       ci.GetClustersInfo(),
-		}
+		collector := NewClusterCollector(t.Context(), ci, cfg.ClusterLister, cfg.ClusterLabels)
 		metricsServ.registry.MustRegister(collector)
 	}
 
@@ -399,30 +400,6 @@ argocd_app_condition{condition="ExcludedResourceWarning",name="my-app-4",namespa
 	}
 }
 
-func TestLegacyMetrics(t *testing.T) {
-	t.Setenv(EnvVarLegacyControllerMetrics, "true")
-
-	expectedResponse := `
-# HELP argocd_app_created_time Creation time in unix timestamp for an application.
-# TYPE argocd_app_created_time gauge
-argocd_app_created_time{name="my-app",namespace="argocd",project="important-project"} -6.21355968e+10
-# HELP argocd_app_health_status The application current health status.
-# TYPE argocd_app_health_status gauge
-argocd_app_health_status{health_status="Degraded",name="my-app",namespace="argocd",project="important-project"} 0
-argocd_app_health_status{health_status="Healthy",name="my-app",namespace="argocd",project="important-project"} 1
-argocd_app_health_status{health_status="Missing",name="my-app",namespace="argocd",project="important-project"} 0
-argocd_app_health_status{health_status="Progressing",name="my-app",namespace="argocd",project="important-project"} 0
-argocd_app_health_status{health_status="Suspended",name="my-app",namespace="argocd",project="important-project"} 0
-argocd_app_health_status{health_status="Unknown",name="my-app",namespace="argocd",project="important-project"} 0
-# HELP argocd_app_sync_status The application current sync status.
-# TYPE argocd_app_sync_status gauge
-argocd_app_sync_status{name="my-app",namespace="argocd",project="important-project",sync_status="OutOfSync"} 0
-argocd_app_sync_status{name="my-app",namespace="argocd",project="important-project",sync_status="Synced"} 1
-argocd_app_sync_status{name="my-app",namespace="argocd",project="important-project",sync_status="Unknown"} 0
-`
-	testApp(t, []string{fakeApp}, expectedResponse)
-}
-
 func TestMetricsSyncCounter(t *testing.T) {
 	cancel, appLister := newFakeLister()
 	defer cancel()
@@ -432,9 +409,9 @@ func TestMetricsSyncCounter(t *testing.T) {
 	appSyncTotal := `
 # HELP argocd_app_sync_total Number of application syncs.
 # TYPE argocd_app_sync_total counter
-argocd_app_sync_total{dest_server="https://localhost:6443",name="my-app",namespace="argocd",phase="Error",project="important-project"} 1
-argocd_app_sync_total{dest_server="https://localhost:6443",name="my-app",namespace="argocd",phase="Failed",project="important-project"} 1
-argocd_app_sync_total{dest_server="https://localhost:6443",name="my-app",namespace="argocd",phase="Succeeded",project="important-project"} 2
+argocd_app_sync_total{dest_server="https://localhost:6443",dry_run="false",name="my-app",namespace="argocd",phase="Error",project="important-project"} 1
+argocd_app_sync_total{dest_server="https://localhost:6443",dry_run="false",name="my-app",namespace="argocd",phase="Failed",project="important-project"} 1
+argocd_app_sync_total{dest_server="https://localhost:6443",dry_run="false",name="my-app",namespace="argocd",phase="Succeeded",project="important-project"} 2
 `
 
 	fakeApp := newFakeApp(fakeApp)
@@ -543,9 +520,9 @@ func TestMetricsReset(t *testing.T) {
 	appSyncTotal := `
 # HELP argocd_app_sync_total Number of application syncs.
 # TYPE argocd_app_sync_total counter
-argocd_app_sync_total{dest_server="https://localhost:6443",name="my-app",namespace="argocd",phase="Error",project="important-project"} 1
-argocd_app_sync_total{dest_server="https://localhost:6443",name="my-app",namespace="argocd",phase="Failed",project="important-project"} 1
-argocd_app_sync_total{dest_server="https://localhost:6443",name="my-app",namespace="argocd",phase="Succeeded",project="important-project"} 2
+argocd_app_sync_total{dest_server="https://localhost:6443",dry_run="false",name="my-app",namespace="argocd",phase="Error",project="important-project"} 1
+argocd_app_sync_total{dest_server="https://localhost:6443",dry_run="false",name="my-app",namespace="argocd",phase="Failed",project="important-project"} 1
+argocd_app_sync_total{dest_server="https://localhost:6443",dry_run="false",name="my-app",namespace="argocd",phase="Succeeded",project="important-project"} 2
 `
 
 	req, err := http.NewRequest(http.MethodGet, "/metrics", nil)

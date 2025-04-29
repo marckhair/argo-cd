@@ -1,7 +1,6 @@
 package admin
 
 import (
-	"bytes"
 	"context"
 	"io"
 	"os"
@@ -68,8 +67,6 @@ func newSettingsManager(data map[string]string) *settings.SettingsManager {
 
 type fakeCmdContext struct {
 	mgr *settings.SettingsManager
-	// nolint:unused,structcheck
-	out bytes.Buffer
 }
 
 func newCmdContext(data map[string]string) *fakeCmdContext {
@@ -88,7 +85,7 @@ type validatorTestCase struct {
 }
 
 func TestCreateSettingsManager(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 
 	f, closer, err := tempFile(`apiVersion: v1
 kind: ConfigMap
@@ -156,15 +153,6 @@ clientSecret: aaaabbbbccccddddeee`,
 				"kustomize.versions.v321": "binary-321",
 			},
 			containsSummary: "updated-options",
-		},
-		"Repositories": {
-			validator: "repositories",
-			data: map[string]string{
-				"repositories": `
-- url: https://github.com/argoproj/my-private-repository1
-- url: https://github.com/argoproj/my-private-repository2`,
-			},
-			containsSummary: "2 repositories",
 		},
 		"Accounts": {
 			validator: "accounts",

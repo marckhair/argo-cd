@@ -97,10 +97,10 @@ func getModification(modification string, resource string, scope string, permiss
 	switch modification {
 	case "set":
 		if scope == "" {
-			return nil, stderrors.New("Flag --group cannot be empty if permission should be set in role")
+			return nil, stderrors.New("flag --group cannot be empty if permission should be set in role")
 		}
 		if permission == "" {
-			return nil, stderrors.New("Flag --permission cannot be empty if permission should be set in role")
+			return nil, stderrors.New("flag --permission cannot be empty if permission should be set in role")
 		}
 		return func(proj string, action string) string {
 			return fmt.Sprintf("%s, %s, %s/%s, %s", resource, action, proj, scope, permission)
@@ -223,13 +223,14 @@ func updateProjects(ctx context.Context, projIf appclient.AppProjectInterface, p
 				break
 			}
 			policyPermission := modification(proj.Name, action)
-			if actionPolicyIndex == -1 && policyPermission != "" {
+			switch {
+			case actionPolicyIndex == -1 && policyPermission != "":
 				updated = true
 				role.Policies = append(role.Policies, formatPolicy(proj.Name, role.Name, policyPermission))
-			} else if actionPolicyIndex > -1 && policyPermission == "" {
+			case actionPolicyIndex > -1 && policyPermission == "":
 				updated = true
 				role.Policies = append(role.Policies[:actionPolicyIndex], role.Policies[actionPolicyIndex+1:]...)
-			} else if actionPolicyIndex > -1 && policyPermission != "" {
+			case actionPolicyIndex > -1 && policyPermission != "":
 				updated = true
 				role.Policies[actionPolicyIndex] = formatPolicy(proj.Name, role.Name, policyPermission)
 			}

@@ -366,11 +366,11 @@ func (proj *AppProject) normalizePolicy(policy string) string {
 func (proj *AppProject) ProjectPoliciesString() string {
 	var policies []string
 	for _, role := range proj.Spec.Roles {
-		projectPolicy := fmt.Sprintf("p, proj:%s:%s, projects, get, %s, allow", proj.ObjectMeta.Name, role.Name, proj.ObjectMeta.Name)
+		projectPolicy := fmt.Sprintf("p, proj:%s:%s, projects, get, %s, allow", proj.Name, role.Name, proj.Name)
 		policies = append(policies, projectPolicy)
 		policies = append(policies, role.Policies...)
 		for _, groupName := range role.Groups {
-			policies = append(policies, fmt.Sprintf("g, %s, proj:%s:%s", groupName, proj.ObjectMeta.Name, role.Name))
+			policies = append(policies, fmt.Sprintf("g, %s, proj:%s:%s", groupName, proj.Name, role.Name))
 		}
 	}
 	return strings.Join(policies, "\n")
@@ -493,11 +493,12 @@ func (proj AppProject) isDestinationMatched(dst ApplicationDestination) bool {
 		dstNamespaceMatched := globMatch(item.Namespace, dst.Namespace, true)
 
 		matched := (dstServerMatched || dstNameMatched) && dstNamespaceMatched
-		if matched {
+		switch {
+		case matched:
 			anyDestinationMatched = true
-		} else if (!dstNameMatched && isDenyPattern(item.Name)) || (!dstServerMatched && isDenyPattern(item.Server)) && dstNamespaceMatched {
+		case (!dstNameMatched && isDenyPattern(item.Name)) || (!dstServerMatched && isDenyPattern(item.Server)) && dstNamespaceMatched:
 			return false
-		} else if !dstNamespaceMatched && isDenyPattern(item.Namespace) && dstServerMatched {
+		case !dstNamespaceMatched && isDenyPattern(item.Namespace) && dstServerMatched:
 			return false
 		}
 	}
